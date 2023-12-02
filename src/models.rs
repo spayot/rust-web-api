@@ -13,7 +13,7 @@ pub struct Post {
 }
 
 impl Post {
-    fn new(title: &str, author: &str, body: &str, datetime: DateTime<Utc>, uuid: Uuid) -> Post {
+    pub fn new(title: &str, author: &str, body: &str, datetime: DateTime<Utc>, uuid: Uuid) -> Post {
         Post {
             title: title.to_string(),
             author: author.to_string(),
@@ -23,7 +23,7 @@ impl Post {
         }
     }
 
-    fn uuid(&self) -> &Uuid {
+    pub fn uuid(&self) -> &Uuid {
         &self.uuid
     }
 }
