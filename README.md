@@ -10,7 +10,9 @@ API allows to access a (fake) database of blogposts.
 
 ## Query API
 * retrieve all existing posts 
-`curl -X GET "localhost:9200/post_feed" | jq '.'`
+```bash
+curl -X GET "localhost:9200/post_feed" | jq '.'
+```
 
 * add a new post:
 ```bash
