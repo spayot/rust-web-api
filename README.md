@@ -1,9 +1,10 @@
 # simple Web API Example
-derived from the excellent project walk-through series from Tensor: 
+API allows to access a (fake) database of blogposts.
+
+derived from the excellent project walk-through series from Tensor-Programming: 
 * specific episode: https://youtu.be/c6q0lUtD3FY?si=Xav0vaxeTmtlnJQf
 * github repo: https://github.com/tensor-programming/Rust_web_api/tree/master
 
-API allows to access a (fake) database of blogposts.
 
 ## Launch API service locally
 `cargo run`
@@ -26,4 +27,7 @@ curl -X POST -H "Content-Type: application/json" localhost:9200/post_post -d @- 
   } 
 EOF
 ```
-
+* retrieve a post by uuid 
+```bash
+curl -X GET "localhost:9200/post/<post-uuid>" | jq '.'
+```

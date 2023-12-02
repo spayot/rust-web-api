@@ -52,6 +52,9 @@ fn main() {
     // endpoint to get all posts from the database
     router.get("/post_feed", handlers.post_feed, "post_feed");
 
+    // endpoint to retrieve a specific post
+    router.get("/post/:id", handlers.get_post, "post");
+
     // endpoint to post a new post
     router.post("/post_post", handlers.post_post, "post_post");
 
