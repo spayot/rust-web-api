@@ -4,7 +4,7 @@ use crate::models::Post;
 use iron::headers::ContentType;
 use iron::{status, AfterMiddleware, Handler, IronResult, Request, Response};
 use router::Router;
-use std::error::Error;
+// use std::error::Error;
 use std::io::Read;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
@@ -31,22 +31,20 @@ macro_rules! lock {
 }
 macro_rules! get_http_param {
     ($r:expr, $e:expr) => {
-        match $r.extensions.get<Router()> {
-            Some(router) => {
-                match router.find($e) {
-                    Some(v) => v,
-                    None => return Ok(Response::with((status::BadRequest))),
-                }
-            }
+        match $r.extensions.get::<Router>() {
+            Some(router) => match router.find($e) {
+                Some(v) => v,
+                None => return Ok(Response::with((status::BadRequest))),
+            },
             None => return Ok(Response::with((status::InternalServerError))),
         }
-    }
+    };
 }
 
 pub struct Handlers {
     pub post_feed: PostFeedHandler,
     pub post_post: PostPostHandler,
-    // pub get_post: GetPostHandler,
+    pub get_post: GetPostHandler,
 }
 
 impl Handlers {
@@ -56,7 +54,7 @@ impl Handlers {
         Handlers {
             post_feed: PostFeedHandler::new(database.clone()),
             post_post: PostPostHandler::new(database.clone()),
-            // get_post: GetPostHandler::new(database.clone()),
+            get_post: GetPostHandler::new(database.clone()),
         }
     }
 }
@@ -95,6 +93,38 @@ impl Handler for PostPostHandler {
         let post: Post = try_handler!(serde_json::from_str(&payload), status::BadRequest);
         lock!(self.database).add_post(post);
         Ok(Response::with((status::Created, payload)))
+    }
+}
+
+pub struct GetPostHandler {
+    database: Arc<Mutex<DataBase>>,
+}
+
+impl GetPostHandler {
+    pub fn new(db: Arc<Mutex<DataBase>>) -> Self {
+        GetPostHandler { database: db }
+    }
+
+    fn find_post(&self, id: &Uuid) -> Option<Post> {
+        let locked = lock!(self.database);
+        let mut iterator = locked.posts().iter();
+        iterator.find(|p| p.uuid() == id).map(|p| p.clone())
+    }
+}
+
+impl Handler for GetPostHandler {
+    fn handle(&self, req: &mut Request) -> IronResult<Response> {
+        let ref id = get_http_param!(req, "id");
+        let id = try_handler!(Uuid::parse_str(id), status::BadRequest);
+        let post = self.find_post(&id);
+        match post {
+            None => Ok(Response::with(status::NotFound)),
+            Some(post) => {
+                let payload =
+                    try_handler!(serde_json::to_string(&post), status::InternalServerError);
+                Ok(Response::with((status::Ok, payload)))
+            }
+        }
     }
 }
 
