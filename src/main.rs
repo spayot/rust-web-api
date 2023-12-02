@@ -1,4 +1,5 @@
 mod database;
+mod handler_macros;
 mod handlers;
 mod models;
 
