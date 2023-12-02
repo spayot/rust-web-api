@@ -49,7 +49,11 @@ fn main() {
 
     let mut router = Router::new();
 
+    // endpoint to get all posts from the database
     router.get("/post_feed", handlers.post_feed, "post_feed");
+
+    // endpoint to post a new post
+    router.post("/post_post", handlers.post_post, "post_post");
 
     let mut chain = Chain::new(router);
     chain.link_before(logger_before);

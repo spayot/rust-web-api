@@ -19,7 +19,7 @@ macro_rules! try_handler {
     ($e:expr, $error:expr) => {
         match $e {
             Ok(x) => x,
-            Err(e) => return Ok(Response::with(($error, e.description()))),
+            Err(e) => return Ok(Response::with(($error, e.to_string()))),
         }
     };
 }
@@ -45,7 +45,7 @@ macro_rules! get_http_param {
 
 pub struct Handlers {
     pub post_feed: PostFeedHandler,
-    // pub post_post: PostPostHandler,
+    pub post_post: PostPostHandler,
     // pub get_post: GetPostHandler,
 }
 
@@ -55,7 +55,7 @@ impl Handlers {
 
         Handlers {
             post_feed: PostFeedHandler::new(database.clone()),
-            // post_post: PostPostHandler::new(database.clone()),
+            post_post: PostPostHandler::new(database.clone()),
             // get_post: GetPostHandler::new(database.clone()),
         }
     }
@@ -75,6 +75,26 @@ impl Handler for PostFeedHandler {
     fn handle(&self, _: &mut Request) -> IronResult<Response> {
         let payload = try_handler!(serde_json::to_string(lock!(self.database).posts()));
         Ok(Response::with((status::Ok, payload)))
+    }
+}
+
+pub struct PostPostHandler {
+    database: Arc<Mutex<DataBase>>,
+}
+
+impl PostPostHandler {
+    pub fn new(db: Arc<Mutex<DataBase>>) -> Self {
+        PostPostHandler { database: db }
+    }
+}
+
+impl Handler for PostPostHandler {
+    fn handle(&self, req: &mut Request) -> IronResult<Response> {
+        let mut payload = String::new();
+        try_handler!(req.body.read_to_string(&mut payload));
+        let post: Post = try_handler!(serde_json::from_str(&payload), status::BadRequest);
+        lock!(self.database).add_post(post);
+        Ok(Response::with((status::Created, payload)))
     }
 }
 
